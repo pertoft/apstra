@@ -40,4 +40,4 @@ set interfaces apply-groups lacp-force-up
 ```
 
 I recomment do apply the configlet with a tag conditon, then you can just add a tag to the leaf you wish to apply lacp force-up
-![lacp-configlet](lace-configlet.png)
+![lacp-configlet](https://github.com/pertoft/juniper/blob/main/configlets/lacp-configlet.png)
