@@ -1,1 +1,1 @@
-# apstra
+# Juniper collection

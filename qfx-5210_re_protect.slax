@@ -1,0 +1,205 @@
+
+set policy-options prefix-list RE_SRC_MANAGEMENTv4 10.0.0.0/24
+set policy-options prefix-list RE_SRC_APSTRAv4 10.1.0.0/24
+set firewall policer RE_HIGH_POLICER if-exceeding bandwidth-limit 20m
+set firewall policer RE_HIGH_POLICER if-exceeding burst-size-limit 256k
+set firewall policer RE_HIGH_POLICER then discard
+set firewall policer RE_LOW_POLICER if-exceeding bandwidth-limit 50k
+set firewall policer RE_LOW_POLICER if-exceeding burst-size-limit 15k
+set firewall policer RE_LOW_POLICER then discard
+set firewall policer RE_MEDIUM_HIGH_POLICER if-exceeding bandwidth-limit 1m
+set firewall policer RE_MEDIUM_HIGH_POLICER if-exceeding burst-size-limit 128k
+set firewall policer RE_MEDIUM_HIGH_POLICER then discard
+set firewall policer RE_MEDIUM_LOW_POLICER if-exceeding bandwidth-limit 500k
+set firewall policer RE_MEDIUM_LOW_POLICER if-exceeding burst-size-limit 64k
+set firewall policer RE_MEDIUM_LOW_POLICER then discard
+set policy-options prefix-list RE_SRC_MANAGEMENTv6
+set policy-options prefix-list RE_SRC_RADIUSv4 apply-path "system radius-server <*.*.*.*>"
+set policy-options prefix-list RE_SRC_RADIUSv6 apply-path "system radius-server <*:*:*>"
+set policy-options prefix-list RE_SRC_SNMPv4 apply-path "snmp community <*> clients <*.*.*.*>"
+set policy-options prefix-list RE_SRC_SNMPv6 apply-path "snmp community <*> clients <*:*:*>"
+set policy-options prefix-list RE_SRC_BGP_GLOBALv4 apply-path "protocols bgp group <*> neighbor <*.*.*.*>"
+set policy-options prefix-list RE_SRC_BGP_GLOBALv6 apply-path "protocols bgp group <*> neighbor <*:*:*>"
+set policy-options prefix-list RE_SRC_BGP_VRFv4 apply-path "routing-instances <*> protocols bgp group <*> neighbor <*.*.*.*>"
+set policy-options prefix-list RE_SRC_BGP_VRFv6 apply-path "routing-instances <*> protocols bgp group <*> neighbor <*:*:*>"
+set policy-options prefix-list RE_SRC_DNSv4 apply-path "system name-server <*.*.*.*>"
+set policy-options prefix-list RE_SRC_DNSv6 apply-path "system name-server <*:*:*>"
+set policy-options prefix-list RE_SRC_NTPv6 apply-path "system ntp server <*:*:*>"
+set policy-options prefix-list RE_SRC_NTPv4 apply-path "system ntp server <*.*.*.*>"
+set policy-options prefix-list RE_SRC_LPBKv6 apply-path "interfaces lo0 unit 0 family inet6 address <*:*:*>"
+set policy-options prefix-list RE_SRC_LPBKv4 apply-path "interfaces lo0 unit 0 family inet address <*.*.*.*>"
+set policy-options prefix-list RE_SRC_LPBK_VRFv6 apply-path "interfaces lo0 unit <*> family inet6 address <*:*:*>"
+set policy-options prefix-list RE_SRC_LPBK_VRFv4 apply-path "interfaces lo0 unit <*> family inet address <*.*.*.*>"
+set policy-options prefix-list RE_SRC_LO_ALL 10.254.0.0/23
+set policy-options prefix-list RE_SRC_TRACEROUTEv4 10.0.0.0/24
+set policy-options prefix-list RE_SRC_TRACEROUTEv6
+set policy-options prefix-list RE_SRC_VRRPv4
+set policy-options prefix-list RE_SRC_VRRPv6
+set policy-options prefix-list RE_SRC_IGMPv4
+set policy-options prefix-list RE_SRC_IGMPv6
+set firewall family inet filter PROTECT_REv4 term APSTRA from source-prefix-list RE_SRC_APSTRAv4
+set firewall family inet filter PROTECT_REv4 term APSTRA from protocol tcp
+set firewall family inet filter PROTECT_REv4 term APSTRA from port ssh
+set firewall family inet filter PROTECT_REv4 term APSTRA from port 830
+set firewall family inet filter PROTECT_REv4 term APSTRA from port 9443
+set firewall family inet filter PROTECT_REv4 term APSTRA from port 443
+set firewall family inet filter PROTECT_REv4 term APSTRA from port 22
+set firewall family inet filter PROTECT_REv4 term APSTRA then policer RE_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term APSTRA then count APSTRAv4
+set firewall family inet filter PROTECT_REv4 term APSTRA then accept
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS from source-prefix-list RE_SRC_MANAGEMENTv4
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS from protocol tcp
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS from port ssh
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS from port 830
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS then policer RE_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS then count MANAGEMENT_ACCESSv4
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS then accept
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS_OUT from source-prefix-list RE_SRC_MANAGEMENTv4
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS_OUT from protocol tcp
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS_OUT from source-port ssh
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS_OUT then policer RE_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS_OUT then count MANAGEMENT_ACCESS_OUTv4
+set firewall family inet filter PROTECT_REv4 term MANAGEMENT_ACCESS_OUT then accept
+set firewall family inet filter PROTECT_REv4 term TRACEROUTE from source-prefix-list RE_SRC_TRACEROUTEv4
+set firewall family inet filter PROTECT_REv4 term TRACEROUTE from protocol udp
+set firewall family inet filter PROTECT_REv4 term TRACEROUTE from destination-port 33434-33534
+set firewall family inet filter PROTECT_REv4 term TRACEROUTE then policer RE_MEDIUM_LOW_POLICER
+set firewall family inet filter PROTECT_REv4 term TRACEROUTE then count RE_SRC_TRACEROUTEv4
+set firewall family inet filter PROTECT_REv4 term TRACEROUTE then accept
+set firewall family inet filter PROTECT_REv4 term BGP from source-prefix-list RE_SRC_BGP_GLOBALv4
+set firewall family inet filter PROTECT_REv4 term BGP from source-prefix-list RE_SRC_BGP_VRFv4
+set firewall family inet filter PROTECT_REv4 term BGP from protocol tcp
+set firewall family inet filter PROTECT_REv4 term BGP from port bgp
+set firewall family inet filter PROTECT_REv4 term BGP then policer RE_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term BGP then count BGPv4
+set firewall family inet filter PROTECT_REv4 term BGP then accept
+set firewall family inet filter PROTECT_REv4 term BFD from source-prefix-list RE_SRC_BGP_GLOBALv4
+set firewall family inet filter PROTECT_REv4 term BFD from source-prefix-list RE_SRC_BGP_VRFv4
+set firewall family inet filter PROTECT_REv4 term BFD from protocol udp
+set firewall family inet filter PROTECT_REv4 term BFD from protocol tcp
+set firewall family inet filter PROTECT_REv4 term BFD from port 3784
+set firewall family inet filter PROTECT_REv4 term BFD from port 3785
+set firewall family inet filter PROTECT_REv4 term BFD then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term BFD then count BFDv4
+set firewall family inet filter PROTECT_REv4 term BFD then accept
+set firewall family inet filter PROTECT_REv4 term VXLAN from source-prefix-list RE_SRC_LO_ALL
+set firewall family inet filter PROTECT_REv4 term VXLAN from protocol udp
+set firewall family inet filter PROTECT_REv4 term VXLAN from port 4789
+set firewall family inet filter PROTECT_REv4 term VXLAN then count VXLANv4
+set firewall family inet filter PROTECT_REv4 term VXLAN then accept
+set firewall family inet filter PROTECT_REv4 term DNS from source-prefix-list RE_SRC_DNSv4
+set firewall family inet filter PROTECT_REv4 term DNS from protocol udp
+set firewall family inet filter PROTECT_REv4 term DNS from source-port domain
+set firewall family inet filter PROTECT_REv4 term DNS then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term DNS then count DNSv4
+set firewall family inet filter PROTECT_REv4 term DNS then accept
+set firewall family inet filter PROTECT_REv4 term ICMP from protocol icmp
+set firewall family inet filter PROTECT_REv4 term ICMP from icmp-type echo-request
+set firewall family inet filter PROTECT_REv4 term ICMP from icmp-type echo-reply
+set firewall family inet filter PROTECT_REv4 term ICMP from icmp-type unreachable
+set firewall family inet filter PROTECT_REv4 term ICMP from icmp-type time-exceeded
+set firewall family inet filter PROTECT_REv4 term ICMP then policer RE_MEDIUM_LOW_POLICER
+set firewall family inet filter PROTECT_REv4 term ICMP then count ICMPv4
+set firewall family inet filter PROTECT_REv4 term ICMP then accept
+set firewall family inet filter PROTECT_REv4 term NTP from source-prefix-list RE_SRC_NTPv4
+set firewall family inet filter PROTECT_REv4 term NTP from source-prefix-list RE_SRC_LPBKv4
+set firewall family inet filter PROTECT_REv4 term NTP from protocol udp
+set firewall family inet filter PROTECT_REv4 term NTP from port ntp
+set firewall family inet filter PROTECT_REv4 term NTP then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term NTP then count NTPv4
+set firewall family inet filter PROTECT_REv4 term NTP then accept
+set firewall family inet filter PROTECT_REv4 term RADIUS from source-prefix-list RE_SRC_RADIUSv4
+set firewall family inet filter PROTECT_REv4 term RADIUS from protocol udp
+set firewall family inet filter PROTECT_REv4 term RADIUS from source-port radius
+set firewall family inet filter PROTECT_REv4 term RADIUS then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term RADIUS then count RADIUSv4
+set firewall family inet filter PROTECT_REv4 term RADIUS then accept
+set firewall family inet filter PROTECT_REv4 term RADIUS_ACC from source-prefix-list RE_SRC_RADIUSv4
+set firewall family inet filter PROTECT_REv4 term RADIUS_ACC from protocol udp
+set firewall family inet filter PROTECT_REv4 term RADIUS_ACC from source-port radacct
+set firewall family inet filter PROTECT_REv4 term RADIUS_ACC then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term RADIUS_ACC then count RADIUS_ACCv4
+set firewall family inet filter PROTECT_REv4 term RADIUS_ACC then accept
+set firewall family inet filter PROTECT_REv4 term SNMP from source-prefix-list RE_SRC_SNMPv4
+set firewall family inet filter PROTECT_REv4 term SNMP from protocol udp
+set firewall family inet filter PROTECT_REv4 term SNMP from destination-port snmp
+set firewall family inet filter PROTECT_REv4 term SNMP then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term SNMP then count SNMPv4
+set firewall family inet filter PROTECT_REv4 term SNMP then accept
+set firewall family inet filter PROTECT_REv4 term VRRP from source-prefix-list RE_SRC_VRRPv4
+set firewall family inet filter PROTECT_REv4 term VRRP from protocol vrrp
+set firewall family inet filter PROTECT_REv4 term VRRP then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet filter PROTECT_REv4 term VRRP then count VRRPv4
+set firewall family inet filter PROTECT_REv4 term VRRP then accept
+set firewall family inet filter PROTECT_REv4 term DROP_FIRST_FRAGMENT from first-fragment
+set firewall family inet filter PROTECT_REv4 term DROP_FIRST_FRAGMENT then count DROP_FIRST_FRAGMENTv4
+set firewall family inet filter PROTECT_REv4 term DROP_FIRST_FRAGMENT then discard
+set firewall family inet filter PROTECT_REv4 term DROP_FRAGMENT from is-fragment
+set firewall family inet filter PROTECT_REv4 term DROP_FRAGMENT then count DROP_FRAGMENTv4
+set firewall family inet filter PROTECT_REv4 term DROP_FRAGMENT then discard
+set firewall family inet filter PROTECT_REv4 term REJECT_ALL then count REJECT_ALL
+set firewall family inet filter PROTECT_REv4 term REJECT_ALL then log
+set firewall family inet filter PROTECT_REv4 term REJECT_ALL then discard
+set firewall family inet6 filter PROTECT_REv6 term MAC_MC from destination-address ff02::/64
+set firewall family inet6 filter PROTECT_REv6 term MAC_MC then count MAC_MCv6
+set firewall family inet6 filter PROTECT_REv6 term MAC_MC then accept
+set firewall family inet6 filter PROTECT_REv6 term BGP from source-prefix-list RE_SRC_BGP_GLOBALv6
+set firewall family inet6 filter PROTECT_REv6 term BGP from source-prefix-list RE_SRC_BGP_VRFv6
+set firewall family inet6 filter PROTECT_REv6 term BGP from next-header tcp
+set firewall family inet6 filter PROTECT_REv6 term BGP from destination-port bgp
+set firewall family inet6 filter PROTECT_REv6 term BGP then policer RE_HIGH_POLICER
+set firewall family inet6 filter PROTECT_REv6 term BGP then count BGPv6
+set firewall family inet6 filter PROTECT_REv6 term BGP then accept
+set firewall family inet6 filter PROTECT_REv6 term DNS from source-prefix-list RE_SRC_DNSv6
+set firewall family inet6 filter PROTECT_REv6 term DNS from next-header udp
+set firewall family inet6 filter PROTECT_REv6 term DNS from source-port domain
+set firewall family inet6 filter PROTECT_REv6 term DNS then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet6 filter PROTECT_REv6 term DNS then count DNSv6
+set firewall family inet6 filter PROTECT_REv6 term DNS then accept
+set firewall family inet6 filter PROTECT_REv6 term ICMP from next-header icmpv6
+set firewall family inet6 filter PROTECT_REv6 term ICMP from icmp-type neighbor-solicit
+set firewall family inet6 filter PROTECT_REv6 term ICMP from icmp-type neighbor-advertisement
+set firewall family inet6 filter PROTECT_REv6 term ICMP from icmp-type echo-reply
+set firewall family inet6 filter PROTECT_REv6 term ICMP from icmp-type echo-request
+set firewall family inet6 filter PROTECT_REv6 term ICMP from icmp-type time-exceeded
+set firewall family inet6 filter PROTECT_REv6 term ICMP then policer RE_HIGH_POLICER
+set firewall family inet6 filter PROTECT_REv6 term ICMP then count ICMPv6
+set firewall family inet6 filter PROTECT_REv6 term ICMP then accept
+set firewall family inet6 filter PROTECT_REv6 term NTP from source-prefix-list RE_SRC_NTPv6
+set firewall family inet6 filter PROTECT_REv6 term NTP from source-prefix-list RE_SRC_LPBKv6
+set firewall family inet6 filter PROTECT_REv6 term NTP from next-header udp
+set firewall family inet6 filter PROTECT_REv6 term NTP from destination-port ntp
+set firewall family inet6 filter PROTECT_REv6 term NTP then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet6 filter PROTECT_REv6 term NTP then count NTPv6
+set firewall family inet6 filter PROTECT_REv6 term NTP then accept
+set firewall family inet6 filter PROTECT_REv6 term BFD from source-prefix-list RE_SRC_BGP_GLOBALv6
+set firewall family inet6 filter PROTECT_REv6 term BFD from source-prefix-list RE_SRC_BGP_VRFv6
+set firewall family inet6 filter PROTECT_REv6 term BFD from next-header udp
+set firewall family inet6 filter PROTECT_REv6 term BFD from next-header tcp
+set firewall family inet6 filter PROTECT_REv6 term BFD then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet6 filter PROTECT_REv6 term BFD then count BFDv6
+set firewall family inet6 filter PROTECT_REv6 term BFD then accept
+set firewall family inet6 filter PROTECT_REv6 term RADIUS from source-prefix-list RE_SRC_RADIUSv6
+set firewall family inet6 filter PROTECT_REv6 term RADIUS from next-header udp
+set firewall family inet6 filter PROTECT_REv6 term RADIUS from source-port radius
+set firewall family inet6 filter PROTECT_REv6 term RADIUS then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet6 filter PROTECT_REv6 term RADIUS then count RADIUSv6
+set firewall family inet6 filter PROTECT_REv6 term RADIUS then accept
+set firewall family inet6 filter PROTECT_REv6 term SNMP from source-prefix-list RE_SRC_SNMPv6
+set firewall family inet6 filter PROTECT_REv6 term SNMP from next-header udp
+set firewall family inet6 filter PROTECT_REv6 term SNMP from destination-port snmp
+set firewall family inet6 filter PROTECT_REv6 term SNMP then policer RE_MEDIUM_HIGH_POLICER
+set firewall family inet6 filter PROTECT_REv6 term SNMP then count SNMPv6
+set firewall family inet6 filter PROTECT_REv6 term SNMP then accept
+set firewall family inet6 filter PROTECT_REv6 term TRACEROUTE from source-prefix-list RE_SRC_TRACEROUTEv6
+set firewall family inet6 filter PROTECT_REv6 term TRACEROUTE from next-header udp
+set firewall family inet6 filter PROTECT_REv6 term TRACEROUTE from destination-port 33434-33534
+set firewall family inet6 filter PROTECT_REv6 term TRACEROUTE then policer RE_MEDIUM_LOW_POLICER
+set firewall family inet6 filter PROTECT_REv6 term TRACEROUTE then count RE_SRC_TRACEROUTEv6
+set firewall family inet6 filter PROTECT_REv6 term TRACEROUTE then accept
+set firewall family inet6 filter PROTECT_REv6 term REJECT_ALL then count REJECT_ALL
+set firewall family inet6 filter PROTECT_REv6 term REJECT_ALL then log
+set firewall family inet6 filter PROTECT_REv6 term REJECT_ALL then discard
+set groups ADD-LOOPBACK-PROTECT interfaces lo0 unit <*> family inet filter input PROTECT_REv4
+set groups ADD-LOOPBACK-PROTECT interfaces lo0 unit <*> family inet6 filter input PROTECT_REv6
+set apply-groups ADD-LOOPBACK-PROTECT
